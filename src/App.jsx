@@ -1,19 +1,15 @@
 import { useState, useEffect } from "react";
-import { FaEdit, FaTrash } from "react-icons/fa";
+import { FaEdit, FaTrash, FaPlus, FaCheckCircle, FaRegCircle } from "react-icons/fa";
 
 export default function App() {
-const [tasks, setTasks] = useState(() => {
-  const savedTasks = localStorage.getItem("tasks");
-  return savedTasks ? JSON.parse(savedTasks) : [];
-});  const [input, setInput] = useState("");
+  const [tasks, setTasks] = useState(() => {
+    const savedTasks = localStorage.getItem("tasks");
+    return savedTasks ? JSON.parse(savedTasks) : [];
+  });
+  const [input, setInput] = useState("");
   const [editIndex, setEditIndex] = useState(null);
 
-  // Load from localStorage
- useEffect(() => {
-  localStorage.setItem("tasks", JSON.stringify(tasks));
-}, [tasks]);
-
-  // Save to localStorage
+  // Sync with localStorage (Sirf ek useEffect kaafi hai)
   useEffect(() => {
     localStorage.setItem("tasks", JSON.stringify(tasks));
   }, [tasks]);
@@ -29,7 +25,6 @@ const [tasks, setTasks] = useState(() => {
     } else {
       setTasks([...tasks, { text: input, completed: false }]);
     }
-
     setInput("");
   };
 
@@ -50,65 +45,92 @@ const [tasks, setTasks] = useState(() => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 bg-indigo-900 to-purple-600 flex items-center justify-center p-6">
-
-      <div className="bg-purple-500 rounded-3xl shadow-2xl p-8 w-full max-w-md h-4xl">
+    <div className="min-h-screen bg-[#0f172a] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+      
+      {/* Main Container with Glassmorphism */}
+      <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl shadow-2xl p-6 w-full max-w-md">
         
-        <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
-          To-Do App 
-        </h1>
+        <header className="text-center mb-8">
+          <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">
+            My Tasks
+          </h1>
+          <p className="text-slate-400 text-sm mt-2">Stay organized and productive</p>
+        </header>
 
-        {/* Input */}
-        <div className="flex gap-2 mb-4">
+        {/* Input Section */}
+        <div className="flex gap-2 mb-8">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Enter task..."
-            className="flex-1 border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            onKeyPress={(e) => e.key === 'Enter' && addTask()}
+            placeholder="What needs to be done?"
+            className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
           />
           <button
             onClick={addTask}
-            className="bg-green-500 text-purple hover:bg-green-600 px-4 py-2 rounded-xl"
+            className={`${
+              editIndex !== null ? "bg-amber-500 hover:bg-amber-600" : "bg-purple-600 hover:bg-purple-700"
+            } text-white p-4 rounded-2xl transition-all duration-300 shadow-lg flex items-center justify-center`}
           >
-            {editIndex !== null ? "Update" : "Add"}
+            {editIndex !== null ? <FaEdit /> : <FaPlus />}
           </button>
         </div>
 
         {/* Task List */}
-        <ul className="space-y-3 max-h-80 overflow-y-auto">
+        <div className="space-y-4 max-h-[450px] overflow-y-auto pr-2 custom-scrollbar">
+          {tasks.length === 0 && (
+            <p className="text-center text-slate-500 py-10 italic">No tasks yet. Add one above!</p>
+          )}
+          
           {tasks.map((task, index) => (
-            <li
+            <div
               key={index}
-              className="flex justify-between items-center bg-gray-100 p-3 rounded-xl"
+              className="group flex items-center justify-between bg-white/5 hover:bg-white/10 border border-white/5 p-4 rounded-2xl transition-all duration-200"
             >
-              <span
+              <div 
+                className="flex items-center gap-3 cursor-pointer flex-1"
                 onClick={() => toggleComplete(index)}
-                className={`cursor-pointer flex-1 ${
-                  task.completed ? "line-through text-gray-400" : ""
-                }`}
               >
-                {task.text}
-              </span>
+                <div className="text-xl">
+                  {task.completed ? (
+                    <FaCheckCircle className="text-emerald-400" />
+                  ) : (
+                    <FaRegCircle className="text-slate-500" />
+                  )}
+                </div>
+                <span
+                  className={`text-lg transition-all ${
+                    task.completed ? "line-through text-slate-500" : "text-slate-200"
+                  }`}
+                >
+                  {task.text}
+                </span>
+              </div>
 
-              <div className="flex gap-2 ml-2">
+              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={() => editTask(index)}
-                  className="text-blue-500"
+                  className="p-2 text-slate-400 hover:text-cyan-400 transition-colors"
                 >
-                    <FaEdit className="text-green-500 text-xl"/>
+                  <FaEdit />
                 </button>
                 <button
                   onClick={() => deleteTask(index)}
-                  className="text-red-500"
+                  className="p-2 text-slate-400 hover:text-rose-500 transition-colors"
                 >
-                   <FaTrash className="text-red-600 text-xl"/>
+                  <FaTrash />
                 </button>
               </div>
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
 
+        {/* Footer Stats */}
+        <div className="mt-6 pt-4 border-t border-white/10 flex justify-between text-xs text-slate-500 uppercase tracking-widest font-semibold">
+          <span>Total: {tasks.length}</span>
+          <span>Done: {tasks.filter(t => t.completed).length}</span>
+        </div>
       </div>
     </div>
   );
